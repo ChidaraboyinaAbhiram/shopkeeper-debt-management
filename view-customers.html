@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Customers</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div style="text-align: center; margin-top: 20px;">
+    <a href="index.html" class="btn">🏠 Back to Home</a>
+  </div>
+
+  <div class="container">
+    <h2>Customer List</h2>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Address</th>
+        </tr>
+      </thead>
+      <tbody id="customerTableBody"></tbody>
+    </table>
+  </div>
+  <script>
+    fetch("http://127.0.0.1:3000/customers")
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.getElementById("customerTableBody");
+        data.forEach(c => {
+          const row = `<tr>
+                    <td>${c.name}</td>
+                    <td>${c.phone}</td>
+                    <td>${c.address}</td>
+                </tr>`;
+          tbody.innerHTML += row;
+        })
+      })
+
+      .catch(err => {
+        alert("❌ Faailed to load customers: " + err);
+      });
+  </script>
+</body>
+
+</html>

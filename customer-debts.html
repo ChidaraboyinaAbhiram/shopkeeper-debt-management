@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Customer Debts</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="index.html" class="btn">🏠 Back to Home</a>
+    </div>
+
+    <div class="container">
+        <h2>View Customer Debts</h2>
+
+        <label for="phone">Select Customer:</label>
+        <select id="phone">
+            <option value="">-- Choose Customer --</option>
+        </select>
+        <button id="clearDebtsBtn" style="margin-top: 10px;">🧹 Clear All Debts</button>
+
+
+        <div id="debtsContainer" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        const phoneSelect = document.getElementById("phone");
+        const container = document.getElementById("debtsContainer");
+
+        // Load customers into dropdown
+        fetch("http://localhost:3000/customers")
+            .then(res => res.json())
+            .then(customers => {
+                customers.forEach(c => {
+                    const option = document.createElement("option");
+                    option.value = c.phone;
+                    option.textContent = `${c.name} (${c.phone})`;
+                    phoneSelect.appendChild(option);
+                });
+
+                phoneSelect.addEventListener("change", function () {
+                    const selectedPhone = this.value;
+                    const selectedCustomer = customers.find(c => c.phone === selectedPhone);
+
+                    if (!selectedCustomer || !selectedCustomer.debts || selectedCustomer.debts.length === 0) {
+                        container.innerHTML = "<p>No debts found for this customer.</p>";
+                        return;
+                    }
+
+                    let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Amount</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                    let total = 0;
+                    selectedCustomer.debts.forEach(d => {
+                        total += Number(d.amount);
+                        html += `
+                        <tr>
+                            <td>₹${d.amount}</td>
+                            <td>${d.reason}</td>
+                            <td>${d.date}</td>
+                        </tr>
+                    `;
+                    });
+
+                    html += `
+                        </tbody>
+                    </table>
+                    <p><strong>Total Debt:</strong> ₹${total}</p>
+                `;
+
+                    container.innerHTML = html;
+                });
+            });
+        document.getElementById("clearDebtsBtn").addEventListener("click", () => {
+            const selectedPhone = phoneSelect.value;
+
+            if (!selectedPhone) {
+                alert("Please select a customer.");
+                return;
+            }
+
+            if (!confirm("Are you sure you want to clear all debts for this customer?")) return;
+
+            fetch("http://localhost:3000/clear-debts", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ phone: selectedPhone })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert("✅ " + data.message);
+                    phoneSelect.dispatchEvent(new Event("change")); // Refresh debts view
+                })
+                .catch(err => alert("❌ Failed to clear debts: " + err));
+        });
+
+    </script>
+
+</body>
+
+</html>

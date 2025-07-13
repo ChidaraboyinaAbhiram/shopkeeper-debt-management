@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Add Debt Entry</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="index.html" class="btn">🏠 Back to Home</a>
+    </div>
+    <div class="container debt-form">
+        <h2>Add Debt Entry</h2>
+
+        <form id="debtForm">
+            <label for="phone">Select Customer (Phone)</label>
+            <select id="phone" name="phone" required></select>
+
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" name="amount" required>
+
+            <label for="reason">Reason</label>
+            <input type="text" id="reason" name="reason" required>
+
+            <button type="submit">Add Debt</button>
+        </form>
+    </div>
+
+    <script>
+        // Load customers into dropdown
+        fetch("http://127.0.0.1:3000/customers")
+            .then(res => res.json())
+            .then(customers => {
+                const dropdown = document.getElementById("phone");
+                customers.forEach(c => {
+                    const option = document.createElement("option");
+                    option.value = c.phone;
+                    option.textContent = `${c.name} (${c.phone})`;
+                    dropdown.appendChild(option);
+                });
+            });
+
+        // Handle form submission
+        document.getElementById("debtForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const phone = document.getElementById("phone").value;
+            const amount = document.getElementById("amount").value;
+            const reason = document.getElementById("reason").value;
+
+            fetch("http://127.0.0.1:3000/add-debt", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phone, amount, reason })
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error("Server error: " + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    alert("✅ " + data.message);
+                    document.getElementById("debtForm").reset();
+                })
+                .catch(err => alert("❌ Failed to add debt: " + err));
+        });
+
+    </script>
+</body>
+
+</html>
